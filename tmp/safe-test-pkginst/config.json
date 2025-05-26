@@ -1,0 +1,6 @@
+{
+  "name": "Safe Test Package",
+  "description": "Minimal test configuration with only safe, commonly installed packages",
+  "version": "1.0.0",
+  "author": "Test User"
+}

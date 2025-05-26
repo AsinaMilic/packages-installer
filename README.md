@@ -1,7 +1,5 @@
 # Packages Installer
 
-> Please note: The script is currently in BETA and in developement. Should not be used for production. Several tests are running on different Linux distributions. Release is planned for May 2025.
-
 Create an enhanced and multiplatform installation script for your favorite package collection, dependencies for your dotfiles configuration or for a single flatpak app. This is possible with the Packges Installer script.
 
 The script will detect automatically your available Linux package manager and will install the packages directly or with a custom installation command for full flexibility.
@@ -29,15 +27,101 @@ You can find more information in the Wiki. https://github.com/mylinuxforwork/pac
 
 > The Packages Installer Editor will support you with an UI to create your installation configurations even faster. The Packages Installer Editor is currently in development and a first BETA will be available soon.
 
+## Stability & Reliability
+
+The packages installer now includes comprehensive stability improvements:
+
+- **Robust Error Handling**: Graceful handling of network failures, missing dependencies, and installation errors
+- **Automatic Retry Mechanism**: Failed operations are automatically retried with exponential backoff
+- **Rollback Support**: Failed installations can be rolled back to maintain system consistency
+- **Input Validation**: All inputs are validated before processing to prevent unexpected failures
+- **Comprehensive Logging**: Detailed logging for troubleshooting and monitoring
+- **System State Verification**: Pre-installation checks ensure system compatibility
+
+Run the stability test suite to verify your environment:
+
+```bash
+./dev/test-stability.sh
+```
+
 ## Installation
 
 You can install a local developement environment with the following command:
 
 ```
 bash <(curl -s https://raw.githubusercontent.com/mylinuxforwork/packages-installer/main/install.sh)
-
 ```
 
 You can add the packages-installer binary to your path with
 # export PATH=$PATH:~/.cargo/bin/
 export PATH=$PATH:~/.local/bin/
+
+## Usage
+
+The packages installer supports multiple usage patterns:
+
+### 1. Install from Remote URL
+
+```bash
+packages-installer -s https://example.com/mypackages.pkginst
+```
+
+### 2. Install from Local pkginst Directory
+
+```bash
+# Direct pkginst directory (contains config.json and packages.json)
+packages-installer -s /path/to/pkginst/directory
+
+# Example with this repository's examples
+packages-installer -s ./examples/com.ml4w.hyprlandsettings/pkginst
+```
+
+### 3. Install from Traditional Project Structure
+
+```bash
+# Traditional structure: source/package-name/pkginst/
+packages-installer -s /path/to/source package-name
+```
+
+### 4. Install from Compressed Archive
+
+```bash
+# From .pkginst file (compressed tar.gz or zip)
+packages-installer -s https://example.com/package.pkginst
+```
+
+### Directory Structure
+
+Your package configuration should follow this structure:
+
+```
+your-package/
+├── pkginst/
+│   ├── config.json          # Package metadata
+│   ├── packages.json        # Package definitions
+│   ├── scripts/
+│   │   ├── pre.sh          # Pre-installation script (optional)
+│   │   └── post.sh         # Post-installation script (optional)
+│   └── [distro]/           # Custom installers (optional)
+│       ├── custom-package
+│       └── another-package
+```
+
+### Additional Options
+
+```bash
+# Show packages without installing
+packages-installer -s /path/to/config -i
+
+# Auto-confirm all prompts
+packages-installer -s /path/to/config -y
+
+# Enable debug output
+packages-installer -s /path/to/config -d
+
+# Force specific package manager
+packages-installer -s /path/to/config -p pacman
+
+# Set AUR helper for Arch Linux
+packages-installer -s /path/to/config -a yay
+```

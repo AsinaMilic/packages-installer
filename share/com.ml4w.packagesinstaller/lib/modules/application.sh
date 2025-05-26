@@ -61,15 +61,24 @@ fi
 # ----------------------------------------------------------
 # Set Package Manager
 # ----------------------------------------------------------
+_echo "Detecting package manager..."
+
 if [ $(_checkCommandExists "pacman") == "0" ]; then
     pkginst_manager="pacman"
+    _echo_success "Detected package manager: pacman (Arch-based)"
 elif [ $(_checkCommandExists "apt") == "0" ]; then
     pkginst_manager="apt"
+    _echo_success "Detected package manager: apt (Debian-based)"
 elif [ $(_checkCommandExists "zypper") == "0" ]; then
     pkginst_manager="zypper"
+    _echo_success "Detected package manager: zypper (openSUSE)"
 elif [ $(_checkCommandExists "dnf") == "0" ]; then
     pkginst_manager="dnf"
-fi   
+    _echo_success "Detected package manager: dnf (Fedora-based)"
+else
+    _echo_warning "No supported package manager detected automatically"
+    pkginst_manager=""
+fi
 
 # ----------------------------------------------------------
 # Parse command-line options
@@ -182,9 +191,47 @@ fi
 # INSTALLED
 if [ "$INSTALLED" = true ]; then
     pkginst_package="$@"
-    pkginst_data_folder="$pkginst_source/$pkginst_package/pkginst"    
+    
+    # If no package name provided but source is specified, we'll determine it later
+    if [ -z "$pkginst_package" ] && [ ! -z "$pkginst_source" ]; then
+        pkginst_package=""
+    fi
+    
+    # For INSTALLED mode, we need to process source first to get the correct path
+    # This mirrors the logic in source.sh but simplified for read-only access
+    if [ ! -z "$pkginst_source" ]; then
+        if [ -f "$pkginst_source/config.json" ] && [ -f "$pkginst_source/packages.json" ]; then
+            # Direct pkginst directory
+            if [ -z "$pkginst_package" ]; then
+                pkginst_package=$(jq -r '.name // .id // "default-package"' "$pkginst_source/config.json" 2>/dev/null | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
+                if [ "$pkginst_package" = "null" ]; then
+                    pkginst_package="default-package"
+                fi
+            fi
+            pkginst_data_folder="$pkginst_source"
+        else
+            # Traditional structure
+            if [ -z "$pkginst_package" ]; then
+                _echo_error "Package name is required when using traditional source structure"
+                exit 1
+            fi
+            pkginst_data_folder="$pkginst_source/$pkginst_package/pkginst"
+        fi
+    else
+        # No source specified, use installed location
+        pkginst_data_folder="$HOME/.local/share/com.ml4w.packagesinstaller/pkginst/$pkginst_package/pkginst"
+    fi
+    
     _showAllPackages
     exit
 fi
 
+# Verify system state after parsing arguments (only when needed)
+_verify_system_state
+
 pkginst_package="$@"
+
+# If no package name provided but source is specified, we'll determine it later
+if [ -z "$pkginst_package" ] && [ ! -z "$pkginst_source" ]; then
+    pkginst_package=""
+fi

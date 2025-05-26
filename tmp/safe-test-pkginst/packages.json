@@ -1,0 +1,46 @@
+{
+  "packages": [
+    {
+      "package": "curl",
+      "description": "Command-line tool for transferring data",
+      "test": "curl"
+    },
+    {
+      "package": "wget",
+      "description": "Network downloader",
+      "test": "wget"
+    }
+  ],
+  "options": [
+    {
+      "name": "Text_Editors",
+      "packages": [
+        {
+          "package": "nano",
+          "description": "Simple text editor",
+          "test": "nano"
+        },
+        {
+          "package": "vim",
+          "description": "Advanced text editor",
+          "test": "vim"
+        }
+      ]
+    },
+    {
+      "name": "System_Tools",
+      "packages": [
+        {
+          "package": "htop",
+          "description": "Interactive process viewer",
+          "test": "htop"
+        },
+        {
+          "package": "tree",
+          "description": "Directory tree display",
+          "test": "tree"
+        }
+      ]
+    }
+  ]
+}
