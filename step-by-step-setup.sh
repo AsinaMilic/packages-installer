@@ -52,10 +52,10 @@ ask_yes_no() {
 init_config() {
     echo -e "${CYAN}Preparing your custom configuration...${NC}"
     rm -rf "$CONFIG_DIR" 2>/dev/null
-    mkdir -p "$CONFIG_DIR"
+    mkdir -p "$CONFIG_DIR/pkginst"
     
-    # Create config.json
-    cat > "$CONFIG_DIR/config.json" << 'EOF'
+    # Create config.json in the pkginst subdirectory
+    cat > "$CONFIG_DIR/pkginst/config.json" << 'EOF'
 {
     "name": "My Custom Debian Setup",
     "description": "Step-by-step selected packages",
@@ -64,8 +64,8 @@ init_config() {
 }
 EOF
     
-    # Start packages.json with empty packages array
-    echo '{"packages":[' > "$CONFIG_DIR/packages.json"
+    # Start packages.json with empty packages array in the pkginst subdirectory
+    echo '{"packages":[' > "$CONFIG_DIR/pkginst/packages.json"
 }
 
 # Function to add packages to config
@@ -78,18 +78,18 @@ add_packages() {
     
     for package_line in "${packages[@]}"; do
         # Add comma if not first package
-        if [ -s "$CONFIG_DIR/packages.json" ] && [ "$(tail -c 2 "$CONFIG_DIR/packages.json")" != "[" ]; then
-            echo ',' >> "$CONFIG_DIR/packages.json"
+        if [ -s "$CONFIG_DIR/pkginst/packages.json" ] && [ "$(tail -c 2 "$CONFIG_DIR/pkginst/packages.json")" != "[" ]; then
+            echo ',' >> "$CONFIG_DIR/pkginst/packages.json"
         fi
-        echo "        $package_line" >> "$CONFIG_DIR/packages.json"
+        echo "        $package_line" >> "$CONFIG_DIR/pkginst/packages.json"
     done
 }
 
 # Function to finalize JSON
 finalize_config() {
-    echo '' >> "$CONFIG_DIR/packages.json"
-    echo '    ]' >> "$CONFIG_DIR/packages.json"
-    echo '}' >> "$CONFIG_DIR/packages.json"
+    echo '' >> "$CONFIG_DIR/pkginst/packages.json"
+    echo '    ]' >> "$CONFIG_DIR/pkginst/packages.json"
+    echo '}' >> "$CONFIG_DIR/pkginst/packages.json"
     
     echo -e "${GREEN}✓ Configuration created!${NC}"
 }
@@ -125,7 +125,7 @@ main() {
     echo -e "\n${YELLOW}=== DEVELOPMENT ENVIRONMENT ===${NC}"
     echo "Programming tools: build-essential, python3-pip, nodejs, npm"
     if ask_yes_no "Install development tools?"; then
-        [ "$has_packages" = true ] && echo ',' >> "$CONFIG_DIR/packages.json"
+        [ "$has_packages" = true ] && echo ',' >> "$CONFIG_DIR/pkginst/packages.json"
         add_packages "Development" \
             '{"package":"build-essential","description":"Compilation tools"}' \
             '{"package":"python3-pip","description":"Python package manager"}' \
@@ -138,7 +138,7 @@ main() {
     echo -e "\n${YELLOW}=== SYSTEM MONITORING ===${NC}"
     echo "System tools: btop, neofetch, lsof, netstat"
     if ask_yes_no "Install system monitoring tools?"; then
-        [ "$has_packages" = true ] && echo ',' >> "$CONFIG_DIR/packages.json"
+        [ "$has_packages" = true ] && echo ',' >> "$CONFIG_DIR/pkginst/packages.json"
         add_packages "System Monitoring" \
             '{"package":"btop","description":"Modern system monitor"}' \
             '{"package":"neofetch","description":"System information"}' \
@@ -151,7 +151,7 @@ main() {
     echo -e "\n${YELLOW}=== MEDIA TOOLS ===${NC}"
     echo "Graphics and media: gimp, vlc, audacity, imagemagick"
     if ask_yes_no "Install media tools?"; then
-        [ "$has_packages" = true ] && echo ',' >> "$CONFIG_DIR/packages.json"
+        [ "$has_packages" = true ] && echo ',' >> "$CONFIG_DIR/pkginst/packages.json"
         add_packages "Media Tools" \
             '{"package":"gimp","description":"Image editor"}' \
             '{"package":"vlc","description":"Media player"}' \
@@ -164,7 +164,7 @@ main() {
     echo -e "\n${YELLOW}=== OFFICE & PRODUCTIVITY ===${NC}"
     echo "Office software: libreoffice, thunderbird, evince (PDF viewer)"
     if ask_yes_no "Install office tools?"; then
-        [ "$has_packages" = true ] && echo ',' >> "$CONFIG_DIR/packages.json"
+        [ "$has_packages" = true ] && echo ',' >> "$CONFIG_DIR/pkginst/packages.json"
         add_packages "Office Tools" \
             '{"package":"libreoffice","description":"Office suite"}' \
             '{"package":"thunderbird","description":"Email client"}' \
@@ -176,7 +176,7 @@ main() {
     echo -e "\n${YELLOW}=== SECURITY TOOLS ===${NC}"
     echo "Security utilities: ufw (firewall), gnupg, fail2ban"
     if ask_yes_no "Install security tools?"; then
-        [ "$has_packages" = true ] && echo ',' >> "$CONFIG_DIR/packages.json"
+        [ "$has_packages" = true ] && echo ',' >> "$CONFIG_DIR/pkginst/packages.json"
         add_packages "Security Tools" \
             '{"package":"ufw","description":"Firewall"}' \
             '{"package":"gnupg","description":"Encryption tools"}' \
@@ -188,7 +188,7 @@ main() {
     echo -e "\n${YELLOW}=== WEB BROWSERS ===${NC}"
     echo "Additional browsers: firefox-esr, chromium"
     if ask_yes_no "Install additional browsers?"; then
-        [ "$has_packages" = true ] && echo ',' >> "$CONFIG_DIR/packages.json"
+        [ "$has_packages" = true ] && echo ',' >> "$CONFIG_DIR/pkginst/packages.json"
         add_packages "Web Browsers" \
             '{"package":"firefox-esr","description":"Firefox web browser"}' \
             '{"package":"chromium","description":"Chromium web browser"}'
@@ -199,7 +199,7 @@ main() {
     echo -e "\n${YELLOW}=== ARCHIVE TOOLS ===${NC}"
     echo "File compression: zip, unzip, rar, 7zip"
     if ask_yes_no "Install archive tools?"; then
-        [ "$has_packages" = true ] && echo ',' >> "$CONFIG_DIR/packages.json"
+        [ "$has_packages" = true ] && echo ',' >> "$CONFIG_DIR/pkginst/packages.json"
         add_packages "Archive Tools" \
             '{"package":"zip","description":"ZIP archiver"}' \
             '{"package":"unzip","description":"ZIP extractor"}' \
@@ -228,16 +228,16 @@ main() {
     echo -e "${CYAN}Here's everything you selected:${NC}"
     echo
     
-    if packages-installer -s "$CONFIG_DIR" -i; then
+    if packages-installer -s "$CONFIG_DIR/pkginst" -i; then
         echo
         echo -e "${CYAN}Ready to install your custom selection?${NC}"
         if ask_yes_no "Install all selected packages?"; then
             echo
             echo -e "${CYAN}Installing your packages...${NC}"
-            if packages-installer -s "$CONFIG_DIR" -y; then
+            if packages-installer -s "$CONFIG_DIR/pkginst" -y; then
                 echo -e "\n${GREEN}🎉 Installation completed successfully!${NC}"
                 echo -e "${CYAN}Your configuration is saved at: $CONFIG_DIR${NC}"
-                echo -e "${CYAN}You can reinstall anytime with: packages-installer -s $CONFIG_DIR -y${NC}"
+                echo -e "${CYAN}You can reinstall anytime with: packages-installer -s $CONFIG_DIR/pkginst -y${NC}"
             else
                 echo -e "\n${RED}✗ Installation failed${NC}"
                 return 1
@@ -245,7 +245,7 @@ main() {
         else
             echo -e "\n${YELLOW}Installation cancelled${NC}"
             echo -e "${CYAN}Your configuration is saved at: $CONFIG_DIR${NC}"
-            echo -e "${CYAN}Install later with: packages-installer -s $CONFIG_DIR -y${NC}"
+            echo -e "${CYAN}Install later with: packages-installer -s $CONFIG_DIR/pkginst -y${NC}"
         fi
     else
         echo -e "\n${RED}✗ Failed to preview packages${NC}"

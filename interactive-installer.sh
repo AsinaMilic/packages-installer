@@ -37,9 +37,9 @@ show_welcome() {
     echo -e "${PURPLE}╔══════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${PURPLE}║${NC}                   ${CYAN}INTERACTIVE SYSTEM SETUP${NC}                   ${PURPLE}║${NC}"
     echo -e "${PURPLE}║${NC}                                                              ${PURPLE}║${NC}"
-    echo -e "${PURPLE}║${NC}  Welcome to the interactive packages installer!             ${PURPLE}║${NC}"
-    echo -e "${PURPLE}║${NC}  This will guide you through setting up your Debian system ${PURPLE}║${NC}"
-    echo -e "${PURPLE}║${NC}  with exactly the software you want.                        ${PURPLE}║${NC}"
+    echo -e "${PURPLE}║${NC}  Welcome to the interactive packages installer!              ${PURPLE}║${NC}"
+    echo -e "${PURPLE}║${NC}  This will guide you through setting up your Debian system   ${PURPLE}║${NC}"
+    echo -e "${PURPLE}║${NC}  with exactly the software you want.                         ${PURPLE}║${NC}"
     echo -e "${PURPLE}║${NC}                                                              ${PURPLE}║${NC}"
     echo -e "${PURPLE}║${NC}  Repository: https://github.com/AsinaMilic/packages-installer${PURPLE}║${NC}"
     echo -e "${PURPLE}╚══════════════════════════════════════════════════════════════╝${NC}"
@@ -97,7 +97,8 @@ get_choice() {
         read choice
         
         if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 0 ] && [ "$choice" -le "$max" ]; then
-            return "$choice"
+            echo "$choice"  # Return the choice value
+            return 0
         else
             echo -e "${RED}Invalid choice. Please enter a number between 0 and $max.${NC}"
         fi
@@ -135,7 +136,11 @@ create_config() {
 EOF
 }
 
-# Add package to configuration
+# Global arrays for package collection
+declare -a selected_packages
+declare -a optional_categories
+
+# Add package to configuration  
 add_package() {
     local package="$1"
     local description="$2"
@@ -171,8 +176,10 @@ add_option_category() {
 # Main interactive setup
 main_setup() {
     local config_dir="~/interactive-setup-config"
-    local selected_packages=()
-    local optional_categories=()
+    
+    # Clear global arrays
+    selected_packages=()
+    optional_categories=()
     
     # Essential packages selection
     show_menu "Essential System Tools" \
@@ -182,8 +189,7 @@ main_setup() {
         "Network tools (net-tools, openssh-client)" \
         "File management (zip, unzip, rsync)"
     
-    get_choice 5
-    essential_choice=$?
+    essential_choice=$(get_choice 5)
     
     case $essential_choice in
         1)
@@ -238,8 +244,7 @@ main_setup() {
             "Docker and containers" \
             "All development tools"
         
-        get_choice 5
-        dev_choice=$?
+        dev_choice=$(get_choice 5)
         
         case $dev_choice in
             1) dev_packages+=("{\"package\":\"nodejs\"}" "{\"package\":\"npm\"}" "{\"package\":\"yarn\"}") ;;
@@ -258,8 +263,7 @@ main_setup() {
             "Graphics tools (inkscape, blender)" \
             "All media tools"
         
-        get_choice 4
-        media_choice=$?
+        media_choice=$(get_choice 4)
         
         case $media_choice in
             1) media_packages+=("{\"package\":\"gimp\"}" "{\"package\":\"imagemagick\"}") ;;
@@ -277,8 +281,7 @@ main_setup() {
             "PDF tools (evince, pdftk)" \
             "All office tools"
         
-        get_choice 4
-        office_choice=$?
+        office_choice=$(get_choice 4)
         
         case $office_choice in
             1) office_packages+=("{\"package\":\"libreoffice\"}") ;;
@@ -296,8 +299,7 @@ main_setup() {
             "Network security (wireshark, nmap)" \
             "All security tools"
         
-        get_choice 4
-        security_choice=$?
+        security_choice=$(get_choice 4)
         
         case $security_choice in
             1) security_packages+=("{\"package\":\"ufw\"}" "{\"package\":\"fail2ban\"}") ;;
