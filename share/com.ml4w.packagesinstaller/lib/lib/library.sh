@@ -23,6 +23,12 @@ _echo_warning() {
     echo "${echo_prefix_warning}${output}" >&2
 }
 
+# _echo_info {output}
+_echo_info() {
+    output="$1"
+    echo ":: ${output}"
+}
+
 # _exit_with_error {message} {exit_code}
 _exit_with_error() {
     message="$1"

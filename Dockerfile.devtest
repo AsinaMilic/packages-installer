@@ -1,0 +1,27 @@
+FROM debian:stable-slim
+
+# Install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    jq \
+    sudo \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root test user and grant sudo NOPASSWD
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Copy the entire application
+COPY . /app
+
+# Set ownership and working directory
+RUN chown -R testuser:testuser /app
+WORKDIR /app
+
+# Switch to the test user
+USER testuser
+
+# Default command (can be overridden)
+CMD ["bash"]

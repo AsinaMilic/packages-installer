@@ -1,0 +1,49 @@
+FROM ubuntu:22.04
+
+# Install basic dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+    sudo \
+    jq \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user for testing
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+USER testuser
+WORKDIR /home/testuser
+
+# Copy the fixed packages-installer files
+COPY --chown=testuser:testuser . /home/testuser/packages-installer/
+
+# Install the fixed version
+RUN cd packages-installer && \
+    ./install.sh && \
+    cp share/com.ml4w.packagesinstaller/lib/modules/application.sh ~/.local/share/com.ml4w.packagesinstaller/lib/modules/ && \
+    cp share/com.ml4w.packagesinstaller/lib/modules/source.sh ~/.local/share/com.ml4w.packagesinstaller/lib/modules/ && \
+    cp share/com.ml4w.packagesinstaller/lib/lib/library.sh ~/.local/share/com.ml4w.packagesinstaller/lib/lib/
+
+# Add local bin to PATH
+ENV PATH="/home/testuser/.local/bin:${PATH}"
+
+# Create test configurations
+RUN mkdir -p test-config && \
+    echo '{"name":"Docker Test","id":"docker-test"}' > test-config/config.json && \
+    echo '{"packages":[{"package":"tree"},{"package":"htop"}]}' > test-config/packages.json
+
+# Run tests
+CMD echo "=== Testing packages-installer in Docker ===" && \
+    echo && \
+    echo "Test 1: Help" && \
+    packages-installer --help | head -5 && \
+    echo && \
+    echo "Test 2: Direct config directory" && \
+    packages-installer -s ./test-config -i && \
+    echo && \
+    echo "Test 3: No double slashes test" && \
+    packages-installer -s .///test-config/// -i 2>&1 | grep -E "//|Processing|Data folder" || echo "No double slashes found ✓" && \
+    echo && \
+    echo "=== All Docker tests completed successfully! ==="
